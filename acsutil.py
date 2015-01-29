@@ -671,6 +671,17 @@ class Parser(ScriptIO):
     def getstring(self, n):
         return self.behavior.strings[int(n)]
 
+class ConstantReference(Expression):
+    def __init__(self, name, val):
+        self.val = val
+        self.name = name
+
+    def constvalue(self):
+        return self.val
+
+    def tocode(self, p):
+        return self.name
+
 class StringLiteral(Expression):
     def __init__(self, val, id):
         Expression.__init__(self)
@@ -1380,7 +1391,8 @@ class ActorPropArgs(ArgumentInterpreter):
         valstring = False
         if isinstance(val, Literal):
             try:
-                val, valstring = aprop_names[val.val]
+                nm, valstring = aprop_names[val.val]
+                val = ConstantReference(nm, val.val)
             except Exception:
                 pass
 
