@@ -127,7 +127,7 @@ class GotoParser(acsutil.Parser):
 class SwitchParserScript(GotoParser):
     spaces = '        '
     def goto_code(self, tgt):
-        return 'goto = %d; restart' % tgt.id
+        return 'goto_block = %d; restart' % tgt.id
 
     def label_code(self, tgt):
         if len(self.blocks) != 1:
@@ -137,14 +137,14 @@ class SwitchParserScript(GotoParser):
         if len(self.blocks) == 1:
             return 'restart'
         else:
-            return 'goto = 0; restart'
+            return 'goto_block = 0; restart'
 
     def prefix_code(self):
         if len(self.blocks) == 1:
             self.spaces = '    '
         else:
-            yield '    int goto;'
-            yield '    switch (goto) {'
+            yield '    int goto_block;'
+            yield '    switch (goto_block) {'
             
 
     def suffix_code(self):
@@ -154,7 +154,7 @@ class SwitchParserScript(GotoParser):
 class SwitchParserFunction(GotoParser):
     spaces = '            '
     def goto_code(self, tgt):
-        return 'goto = %d; continue' % tgt.id
+        return 'goto_block = %d; continue' % tgt.id
 
     def label_code(self, tgt):
         if len(self.blocks) != 1:
@@ -164,36 +164,50 @@ class SwitchParserFunction(GotoParser):
         if len(self.blocks) == 1:
             self.spaces = '    '
         else:
-            yield '    int goto;'
+            yield '    int goto_block;'
             yield '    while (1) {'
-            yield '        switch (goto) {'
+            yield '        switch (goto_block) {'
 
     def suffix_code(self):
         if len(self.blocks) != 1:
             yield '        }'
             yield '    }'
 
+        if not self.script.isvoid:
+            yield '    return 0;'
+
 def declare_mapvars(acsf, seq):
     for var in seq:
         val = var.initval
         i = var.id
-        if isinstance(val, int):
-            if var.is_string() and val >= 0 and val < len(acsf.strings):
-                yield 'int map%d = %s; ' % (i, acsf.getstring(val))
-            else:
-                yield 'int map%d = %d;' % (i, val)
-        else:
-            if var.is_string():
+        isarray = not isinstance(val, int)
+        isstring = var.is_string()
+        if isarray:
+            if isstring:
                 yield 'int map%d[%d] = {%s};' % \
                     (i, len(val), ', '.join(acsf.getstring(v) for v in val))
             else:
                 yield 'int map%d[%d] = {%s};' % \
                     (i, len(val), ', '.join(str(v) for v in val))
-
+        else:
+            if isstring:
+                yield 'int map%d = %s; ' % (i, acsf.getstring(val))
+            else:
+                yield 'int map%d = %d;' % (i, val)
+        if isarray:
+            if not var.isarray:
+                yield '// Warning: array map%d[] not used as array' % i
+        else:
+            if var.isarray:
+                yield '// Warning: variable map%d used as array' % i
+            
 
 def declare_vars(seq, type):
     for var in seq:
-        yield '%s int %d:%s%d;' % (type, var.id, type, var.id)
+        arrdec = ''
+        if var.isarray:
+            arrdec = '[]'
+        yield '%s int %d:%s%d%s;' % (type, var.id, type, var.id, arrdec)
 
 def getvars(acsf, type):
     vars = acsf.vars[type].vars

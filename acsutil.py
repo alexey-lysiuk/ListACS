@@ -177,23 +177,26 @@ class Script(Marker):
     
     def get_type(self):
         try:
-            return script_types[self.type]
+            return script_types[self.type] or "UNKNOWN"
         except IndexError:
             return "UNKNOWN"
         
 
     def getlabel(self):
-
         return 'script %d, type = %d (%s), flags = %04x, argc = %d' % \
             (self.num, self.type, self.get_type(), self.flags, self.argc)
 
     def getheader(self):
-        if self.type > 0:
-            argstr = self.get_type()
-        elif self.argc:
+        if self.argc:
             argstr = '(%s)' % ', '.join('int local%d' % i for i in xrange(self.argc))
         else:
             argstr = '(void)'
+
+        if self.type > 0:
+            if self.argc:
+                argstr = '%s %s' % (argstr, self.get_type())
+            else:
+                argstr = self.get_type()
         return 'script %d %s // addr = %d, flags=%04x' % \
             (self.num, argstr, self.ptr, self.flags)
 
@@ -738,7 +741,8 @@ class ArrayIndex(Expression):
     @classmethod
     def parse(cls, p, id, clas):
         avar = p.lookupvar(clas.type, id)
-        return ArrayIndex(avar, p.pop())
+        avar.isarray = True
+        return cls(avar, p.pop())
 
 class Variable(Expression):
     initval = 0
@@ -2081,6 +2085,7 @@ linespecials = [
     'Ceiling_CrushRaiseAndStaySilA']
 
 script_types = [
+
     "NORMAL",
     "OPEN",
     "RESPAWN",
@@ -2090,6 +2095,9 @@ script_types = [
     "BLUE",
     "RED",
     "WHITE",
+    None, 
+    None,
+    None,
     "LIGHTNING",
     "UNLOADING",
     "DISCONNECT",

@@ -18,7 +18,11 @@ Options:
   -s, --strings         print string table
   -v, --vars            print variable declarations when disassembling
   -c, --comment         comment out anything not executable
-  -w FILE, --wad=FILE   read from a WAD file
+  -w FILE, --wad=FILE   read from a WAD file **
+
+** To read a lump from a specific map, use <map>/<lump>, e.g. 
+
+   listacs -w wadfile.wad map01/behavior
 
 -- Decompilation challenges --
 
