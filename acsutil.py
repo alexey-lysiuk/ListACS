@@ -326,7 +326,7 @@ class Behavior(object):
                 scripts.append(cscript)
                 markers.append(cscript)
 
-                scriptsnum[num] = cscript
+                scriptnum[num] = cscript
 
             stringtable = dirofs + getui(data, dirofs) * 12 + 4
             strings = read_strings(data, stringtable, stringtable + 4)
@@ -629,7 +629,7 @@ class Parser(ScriptIO):
             if pcd >= 240:
                 pcd = 240 + ((pcd - 240) << 8) + readub(self)
         else:
-            pcd = readui(io)
+            pcd = readui(self)
                 
         if pcd > len(pcodes):
             pcd = pcodes[pcode_index['TERMINATE']]
