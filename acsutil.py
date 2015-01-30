@@ -151,8 +151,8 @@ class Marker(object):
                     else:
                         pcd = readui(io)
                         
-                    if pcd > npcodes:
-                        yield '  %10d: UNKNOWN %d' % (addr - self.ptr, pcd)
+                    if pcd >= npcodes:
+                        yield '  %10d: UNKNOWN %d' % (addr - io.begin, pcd)
                         continue
 
                     yield '  %10d: %s' % (addr - io.begin, pcodes[pcd].disassemble(io))
