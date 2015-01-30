@@ -34,8 +34,8 @@ _header = struct.Struct("<4sII")
 _dirent = struct.Struct("<II8s")
 
 # Map members
-specnames = set(('THINGS', 'VERTEXES','LINEDEFS', 'SIDEDEFS', 'SEGS', 
-                 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP', 
+specnames = set(('THINGS', 'VERTEXES','LINEDEFS', 'SIDEDEFS', 'SEGS',
+                 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP',
                  'BEHAVIOR', 'SCRIPTS'))
 
 class Lump(object):
@@ -79,7 +79,7 @@ class WadFile(object):
                 data = ""
 
             lumps.append(Lump(name.upper(), data, i))
-            
+
         self.lumps = lumps
 
     def writeto(self, file):
@@ -87,7 +87,7 @@ class WadFile(object):
         dirsize = 16 * len(self)
 
         pos = 12
-        
+
         for lump in self:
             lsize = len(lump.data)
             directory.append((lump.name, pos, lsize))
@@ -99,7 +99,7 @@ class WadFile(object):
 
         for name, pos, size in directory:
             file.write(_dirent.pack(pos, size, name))
-        
+
     # Simple linear search works fine: there are usually
     # only a few hundred lumps in a file.
     def find(self, name, marker=None):
@@ -126,7 +126,7 @@ class WadFile(object):
             lump = self.lumps[idx]
             if lump.marker:
                 return lump
-            
+
             idx -= 1
         return None
 
@@ -138,16 +138,16 @@ class WadFile(object):
        idx = lump.index
        self.lumps.remove(idx)
        self._reindex(idx)
-    
+
     def insert(self, lump, before=None):
         idx = (before.index if before else len(self.lumps))
         lump.index = idx
         self.lumps.insert(idx, lump)
         self._reindex(idx + 1)
-        
+
     def append(self, lump):
         self.insert(lump)
-        
+
     def __getitem__(self, name):
         if isinstance(name, int):
             return self.lumps[name]
@@ -160,10 +160,10 @@ class WadFile(object):
 
     def __len__(self):
         return len(self.lumps)
-    
+
     def __iter__(self):
         return iter(self.lumps)
-        
+
 
 
 
@@ -202,10 +202,10 @@ def _defparser(name, sdef, *members):
 
             for k, v in kwargs.items():
                 setattr(self, k, v)
-    
+
         def _toseq(self):
             return [getattr(self, n) for n in members]
-        
+
         def __str__(self):
             return mstruct.pack(*self._toseq())
 
@@ -224,11 +224,11 @@ def _defparser(name, sdef, *members):
 # TODO: finish other structures
 _defparser('Vertex', '<hh', 'x', 'y')
 _defparser('Thing', '<hhhhH', 'x', 'y', 'angle', 'type', 'flags')
-_defparser('HexThing', '<hhhhhhHBBBBBB', 'id', 'x', 'y', 'height', 
-           'angle', 'type', 'flags', 'special', 'arg0', 'arg1', 
+_defparser('HexThing', '<hhhhhhHBBBBBB', 'id', 'x', 'y', 'height',
+           'angle', 'type', 'flags', 'special', 'arg0', 'arg1',
            'arg2', 'arg3', 'arg4')
-_defparser('Linedef', '<HHHHHhh', 'start_vtx', 'end_vtx', 'flags', 
+_defparser('Linedef', '<HHHHHhh', 'start_vtx', 'end_vtx', 'flags',
            'special', 'sector_tag', 'right_sdef', 'left_sdef')
-_defparser('HexLinedef', '<HHHBBBBBBhh', 'start_vtx', 'end_vtx', 
-           'flags', 'special', 'arg0', 'arg1', 'arg2', 'arg3', 
+_defparser('HexLinedef', '<HHHBBBBBBhh', 'start_vtx', 'end_vtx',
+           'flags', 'special', 'arg0', 'arg1', 'arg2', 'arg3',
            'arg4', 'right_sdef', 'left_sdef')

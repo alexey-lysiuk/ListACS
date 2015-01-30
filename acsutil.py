@@ -48,7 +48,7 @@ def _fmtrw(fmt):
     def retw(self, *dats):
         for dat in dats:
             self.write(pack(dat))
-            
+
     def retr(self):
         dat = self.read(size)
         if len(dat) < size:
@@ -116,7 +116,7 @@ def read_array(data, scode, ipos = 0):
     if isinstance(data, list):
         data = data[0]
 
-    struc = struct.Struct('<' + scode) 
+    struc = struct.Struct('<' + scode)
     size = struc.size
     cnt = (len(data) - ipos) / size
     for i in xrange(cnt):
@@ -143,21 +143,21 @@ class Marker(object):
                 npcodes = len(pcodes)
                 while io.addr < end:
                     addr = io.addr
-                    
+
                     if little:
                         pcd = readub(io)
                         if pcd >= 240:
                             pcd = 240 + ((pcd - 240) << 8) + readub(io)
                     else:
                         pcd = readui(io)
-                        
+
                     if pcd >= npcodes:
                         yield '  %10d: UNKNOWN %d' % (addr - io.begin, pcd)
                         continue
 
                     yield '  %10d: %s' % (addr - io.begin, pcodes[pcd].disassemble(io))
-                
-                    
+
+
             except EOFError:
                 pass
             yield ''
@@ -174,13 +174,13 @@ class Script(Marker):
         self.type = type
         self.argc = argc
         self.flags = 0
-    
+
     def get_type(self):
         try:
             return script_types[self.type] or "UNKNOWN"
         except IndexError:
             return "UNKNOWN"
-        
+
 
     def getlabel(self):
         return 'script %d, type = %d (%s), flags = %04x, argc = %d' % \
@@ -206,7 +206,7 @@ class Script(Marker):
 class Function(Marker):
     executable = True
     def __init__(self, ptr, idx, argc, locals, hasreturn, importnum):
-        Marker.__init__(self, ptr, 'function %d (%d, %d, %d) -> %d' % 
+        Marker.__init__(self, ptr, 'function %d (%d, %d, %d) -> %d' %
                         (idx, argc, locals, importnum, hasreturn))
         self.idx = idx
 
@@ -244,7 +244,7 @@ class ScriptIO(object):
 
     def seek(self, n):
         self.addr = n
-    
+
     def tell(self):
         return self.addr
 
@@ -272,7 +272,7 @@ class VariableSet(object):
             return self.vars[id]
         var = self.vars[id] = self.clas(id)
         return var
-        
+
 class Behavior(object):
     """Parses a compiled ACS object."""
 
@@ -281,7 +281,7 @@ class Behavior(object):
         self.scripts = scripts = []
         self.functions = functions = []
         self.scriptnum = scriptnum = {}
-        
+
         self.vars = {}
         for vt in [GlobalVar, MapVar, WorldVar]:
             self.vars[vt.type] = VariableSet(vt)
@@ -341,9 +341,9 @@ class Behavior(object):
 
             for i, argcount, localcount, hasreturnval, importnum, ptr in \
                     read_array(chunks.get('FUNC'), 'BBBBI'):
-                cfunc = Function(ptr, len(functions), argcount, localcount, 
+                cfunc = Function(ptr, len(functions), argcount, localcount,
                                  hasreturnval, importnum)
-                
+
                 functions.append(cfunc)
                 markers.append(cfunc)
 
@@ -394,7 +394,7 @@ class Behavior(object):
                 except KeyError:
                     pass
 
-            
+
         markers.append(Marker(len(data), 'End'))
 
         markers.sort(key = lambda m: m.ptr)
@@ -412,7 +412,7 @@ class Behavior(object):
 
     def decompile(self, addr):
         """Attempt to decompile script or function at addr.
-        
+
         Returns an Interpreter object.
         """
 
@@ -460,7 +460,7 @@ class Expression(StackItem):
 
     def lookupstring(self, p):
         return self
-    
+
     def tocode(self, p):
         return '/* not implemented for %s */' % type(self).__name__
 
@@ -477,7 +477,7 @@ class Block(Expression):
         self.statements = []
         self._finish = finish
         self._finish_args = finish_args
-    
+
     def finish(self):
         if self._finish:
             self._finish(*self._finish_args)
@@ -508,7 +508,7 @@ class Target(Expression):
     label = ''
     def __init__(self, addr):
         self.addr = addr
-        
+
     def tocode(self, p):
         return p.goto_code(self)
 
@@ -525,7 +525,7 @@ class Instruction(Expression):
         self.pcode = pcode
         if stack:
             self.stack = stack
-        
+
     def queue_target(self, p, tgt):
         p.queue(p.read_instruction, tgt, p.top)
 
@@ -534,7 +534,7 @@ class Instruction(Expression):
 
     def parse_block(self, p, block):
         p.queue(block.parse, p, self.next)
-        
+
     def disassemble(self):
         return self.pcode.name
 
@@ -623,14 +623,14 @@ class Parser(ScriptIO):
 
         self.addr = addr
         self.top = stacktop
-        
+
         if self.little:
             pcd = readub(self)
             if pcd >= 240:
                 pcd = 240 + ((pcd - 240) << 8) + readub(self)
         else:
             pcd = readui(self)
-                
+
         if pcd > len(pcodes):
             pcd = pcodes[pcode_index['TERMINATE']]
         else:
@@ -710,7 +710,7 @@ class Literal(Expression):
 
     def getexpr(self, p):
         return self
-    
+
     def disassemble(self):
         return str(self.val)
 
@@ -739,7 +739,7 @@ class ArrayIndex(Expression):
     def lookupstring(self, p):
         self.arr = self.arr.lookupstring(p)
         return self
-    
+
     def assignedby(self, p, a):
         self.arr.assignedby(p, a)
 
@@ -820,7 +820,7 @@ class Push(Instruction):
         self.values = [clas.parse(p, v, *args) for v in dargs]
         for v in self.values:
             p.push(v)
-        
+
         Instruction.parse(self, p)
 
     def disassemble(self):
@@ -852,7 +852,7 @@ class Assign(Instruction):
         return '%s %s' % (self.pcode.name, self.dest.tocode(None))
 
     def tocode(self, p):
-        return '%s %s %s' % (self.dest.tocode(p), self.op, 
+        return '%s %s %s' % (self.dest.tocode(p), self.op,
                              self.val.tocode(p))
 
 class InPlaceUnary(Instruction):
@@ -900,7 +900,7 @@ unary_opers = {
 }
 
 class BinOperator(Instruction):
-    
+
     def parse(self, p, op):
         self.right = p.pop()
         self.left = p.pop()
@@ -918,7 +918,7 @@ class BinOperator(Instruction):
         Instruction.parse(self, p)
 
     def tocode(self, p):
-        return '(%s %s %s)' % (self.left.tocode(p), self.op, 
+        return '(%s %s %s)' % (self.left.tocode(p), self.op,
                                self.right.tocode(p))
 
 class UnaryOperator(Instruction):
@@ -980,7 +980,7 @@ class Goto(Instruction):
     def parse(self, p, dargs):
         self.next = p.target(dargs[0])
         Instruction.parse(self, p)
-        
+
     def parse_block(self, p, block):
         Instruction.parse_block(self, p, block)
 
@@ -1017,7 +1017,7 @@ class IfGoto(Instruction):
     def parse_tgtblock(self, p, block):
         #print 'ifgoto %d parse_tgtblock %d' % (self.addr, self.target.addr)
         self.tgtblock = p.create_sub_block(self.target, self.parse_finish, p, block)
-        
+
     def parse_finish(self, p, block):
         #print 'ifgoto %d parse_finish' % self.addr
         nextblock = self.nextblock
@@ -1028,7 +1028,7 @@ class IfGoto(Instruction):
         tgtstmts = tgtblock.statements
         if nextblock.terminal and tgtblock.terminal:
             block.terminal = True
-        
+
         elif nextblock.terminal:
             #print 'next terminal:', self.next.addr
             block.statements.extend(tgtstmts)
@@ -1041,7 +1041,7 @@ class IfGoto(Instruction):
         else:
             while nextstmts and tgtstmts and \
                     nextstmts[-1] == tgtstmts[-1]:
-            
+
                 common_statements.append(nextstmts.pop())
                 tgtstmts.pop()
 
@@ -1067,17 +1067,17 @@ class IfGoto(Instruction):
                         statements.extend(common_statements)
                         p.queue(block.parse, p, last)
                     return
-            
+
         p.queue(block.finish)
         statements.extend(common_statements)
-            
+
     def genlines(self, p):
         elsblock = self.nextblock
         ifblock = self.tgtblock
 
         if self.neg:
             ifblock, elsblock = elsblock, ifblock
-        
+
         if ifblock.statements:
             yield 'if (%s) {' % self.stack.tocode(p)
 
@@ -1095,7 +1095,7 @@ class IfGoto(Instruction):
             for l in elsblock.genlines(p):
                 yield '    ' + l
             yield '}'
-            
+
 
 
     def disassemble(self):
@@ -1114,7 +1114,7 @@ class SwitchExpr(Expression):
     def __init__(self, switch):
         self.switch = switch
         self.cases = []
-        
+
     def addcase(self, case, tgt):
         self.cases.append(SwitchCase(case, tgt))
 
@@ -1126,9 +1126,9 @@ class SwitchExpr(Expression):
         if idx >= len(self.cases):
             return
         case = self.cases[idx]
-        case.block = p.create_sub_block(case.target, self.parse_case, 
+        case.block = p.create_sub_block(case.target, self.parse_case,
                                         p, block, idx + 1)
-        
+
     def genlines(self, p):
         yield 'switch (%s) {' % self.switch.tocode(p)
         for c in self.cases:
@@ -1136,7 +1136,7 @@ class SwitchExpr(Expression):
             for l in c.block.genlines(p):
                 yield '        %s' % l
         yield '}'
-        
+
 
 class CaseGoto(Instruction):
     def disassemble(self):
@@ -1212,7 +1212,7 @@ class PrintExpr(Expression):
             return '%s(%s; %s)' % (self.name, itemcode, argcode)
 
         return '%s(%s)' % (self.name, itemcode)
-        
+
     def finish(self, name, optargs=None):
         self.name = name
         self.optargs = optargs
@@ -1266,7 +1266,7 @@ class CreateTranslation(Instruction):
         pi = PrintExpr()
         pi.append(p.pop())
         p.push(pi)
-        
+
 class TranslationRange(Instruction):
     def tocode(self, p):
         args = tuple([e.tocode(p) for e in self.args])
@@ -1282,7 +1282,7 @@ class TranslationRange(Instruction):
         except Exception:
             pass
         Instruction.parse(self, p)
-    
+
 class EndPrint(Instruction):
     name = 'Unknown'
     def parse(self, p, name):
@@ -1334,7 +1334,7 @@ class HudMessage(Instruction):
 
 class Call(Instruction):
     def tocode(self, p):
-        return'func%d(%s)' % (self.funcnum, 
+        return'func%d(%s)' % (self.funcnum,
                               ', '.join(e.tocode(p) for e in self.args))
 
     def parse(self, p, inst_args, wantresult):
@@ -1355,7 +1355,7 @@ class Call(Instruction):
 
     def disassemble(self):
         return '%s %d' % (self.pcode.name, self.funcnum)
-            
+
 class ReturnVoid(Terminal):
     def tocode(self, p):
         if not self.void:
@@ -1421,7 +1421,7 @@ class BuiltinCall(Instruction):
         else:
             args = [Literal(v) for v in args]
             const = True
-        
+
         self.name = name
         self.args = list(interp.convert(p, args))
         self.const = const
@@ -1450,7 +1450,7 @@ class LineSpec(BuiltinCall):
 
         if specname is None:
             specname = 'LineSpec%d' % self.lspec
-            
+
         if nargs == 0:
             BuiltinCall.parse(self, p, inst_args[1:], void, specname)
         else:
@@ -1470,7 +1470,7 @@ class IntegerArgCode(ArgCode):
     def __init__(self, lfunc, bfunc=None):
         self.lfunc = lfunc
         self.bfunc = bfunc or lfunc
-    
+
     def parse(self, s):
         return (self.lfunc if s.little else self.bfunc)(s)
 
@@ -1482,7 +1482,7 @@ class VarArgCode(ArgCode):
         cnt = readub(s)
         for i in xrange(cnt):
             yield readub(s)
-        
+
     def parse(self, s):
         return list(self._parse(s))
 
@@ -1576,8 +1576,8 @@ class PushBytesPCode(PCode):
 
     def disassemble(self, s):
         return '%s %s' % (self.name, ', '.join(self.getargs(s)))
-        
-        
+
+
 
 def genpcodes():
     pcodes = [None] * len(pcode_names)
@@ -1607,7 +1607,7 @@ def genpcodes():
     def byname(name):
         addpcode(pcodenames[name])
 
-    
+
 
     pcode ('NOP', Instruction)
 
@@ -1693,7 +1693,7 @@ def genpcodes():
     for vt in vartypes:
         for nm, op in opsym.iteritems():
             apcode(nm + vt.opname + 'VAR', 'V', Assign, op, vt)
-            
+
         for nm, op in uopsym.iteritems():
             apcode(nm + vt.opname + 'VAR', 'V', InPlaceUnary, op, vt)
 
@@ -1701,7 +1701,7 @@ def genpcodes():
         if vt.can_be_array:
             for nm, op in opsym.iteritems():
                 apcode(nm + vt.opname + 'ARRAY', 'V', Assign, op, ArrayIndex, vt)
-            
+
             for nm, op in uopsym.iteritems():
                 apcode(nm + vt.opname + 'ARRAY', 'V', InPlaceUnary, op, ArrayIndex, vt)
 
@@ -1883,7 +1883,7 @@ def genpcodes():
     pcode('OPTHUDMESSAGE', OptHudMessage)
     pcode('ENDHUDMESSAGE', HudMessage, 'HudMessage')
     pcode('ENDHUDMESSAGEBOLD', HudMessage, 'HudMessageBold')
-    
+
     pcode('PRINTSTRING', PrintString, 's')
     pcode('PRINTNUMBER', PrintItem, 'd')
     pcode('PRINTCHARACTER', PrintItem, 'c')
@@ -2107,7 +2107,7 @@ script_types = [
     "BLUE",
     "RED",
     "WHITE",
-    None, 
+    None,
     None,
     None,
     "LIGHTNING",

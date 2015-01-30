@@ -32,31 +32,31 @@ import optparse
 from cStringIO import StringIO
 
 options = optparse.OptionParser(usage="usage: %prog [-d] [-s] [-v] [-c] [-o file] [-w wad] <file or lump>")
-options.add_option("-o", "--output", action="store", 
+options.add_option("-o", "--output", action="store",
                    dest="output", metavar="FILE",
                    default=None, help="write output to FILE")
 
-options.add_option("-d", "--decompile", action="store_true", 
+options.add_option("-d", "--decompile", action="store_true",
                    dest="decompile", metavar="BOOL",
                    default=False, help="try to decompile to ACS source")
 
-options.add_option("-g", "--goto", action="store_true", 
+options.add_option("-g", "--goto", action="store_true",
                    dest="goto", metavar="BOOL",
                    default=False, help="use 'goto' statement instead of switch-loop hack")
 
-options.add_option("-s", "--strings", action="store_true", 
+options.add_option("-s", "--strings", action="store_true",
                    dest="strings", metavar="BOOL",
                    default=False, help="print string table")
 
-options.add_option("-v", "--vars", action="store_true", 
+options.add_option("-v", "--vars", action="store_true",
                    dest="vars", metavar="BOOL",
                    default=False, help="print variable declarations when disassembling")
 
-options.add_option("-c", "--comment", action="store_true", 
+options.add_option("-c", "--comment", action="store_true",
                    dest="comment", metavar="BOOL",
                    default=False, help="comment out anything not executable")
 
-options.add_option("-w", "--wad", action="store", 
+options.add_option("-w", "--wad", action="store",
                    dest="wad", metavar="FILE",
                    default=None, help="read from a WAD file")
 
@@ -99,7 +99,7 @@ class GotoParser(acsutil.Parser):
             if tgt.entries > 1:
                 tgt.id = len(blocks) + 1
                 blocks.append(tgt)
-            
+
         yield self.script.getheader()
         yield '{'
         vars = ['local%d' % v for v in self.locals.vars if v >= self.script.argc]
@@ -107,7 +107,7 @@ class GotoParser(acsutil.Parser):
             vars.sort()
             yield '    int %s;' % ', '.join(vars)
 
-        for l in self.prefix_code(): 
+        for l in self.prefix_code():
             yield l
 
         self.stgt.id = 0
@@ -119,7 +119,7 @@ class GotoParser(acsutil.Parser):
             for l in tgt.block.genlines(self):
                 yield self.spaces + l
             yield ''
-        
+
         for l in self.suffix_code():
             yield l
         yield '}'
@@ -145,12 +145,12 @@ class SwitchParserScript(GotoParser):
         else:
             yield '    int goto_block;'
             yield '    switch (goto_block) {'
-            
+
 
     def suffix_code(self):
         if len(self.blocks) != 1:
             yield '    }'
-    
+
 class SwitchParserFunction(GotoParser):
     spaces = '            '
     def goto_code(self, tgt):
@@ -159,7 +159,7 @@ class SwitchParserFunction(GotoParser):
     def label_code(self, tgt):
         if len(self.blocks) != 1:
             return '        case %d:' % tgt.id
-        
+
     def prefix_code(self):
         if len(self.blocks) == 1:
             self.spaces = '    '
@@ -200,7 +200,7 @@ def declare_mapvars(acsf, seq):
         else:
             if var.isarray:
                 yield '// Warning: variable map%d used as array' % i
-            
+
 
 def declare_vars(seq, type):
     for var in seq:
