@@ -27,9 +27,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys, doomwad, acsutil
+import sys
 import optparse
-from cStringIO import StringIO
+
+import acsutil
+import doomwad
+
 
 options = optparse.OptionParser(usage="usage: %prog [-d] [-s] [-v] [-c] [-o file] [-w wad] <file or lump>")
 options.add_option("-o", "--output", action="store",
@@ -60,8 +63,10 @@ options.add_option("-w", "--wad", action="store",
                    dest="wad", metavar="FILE",
                    default=None, help="read from a WAD file")
 
+
 def indexes(lst):
     return sorted(b.index for b in lst)
+
 
 def getstack(v, env):
     while v:
@@ -71,6 +76,7 @@ def getstack(v, env):
 
 class GotoParser(acsutil.Parser):
     spaces = '    '
+
     def __init__(self, scr, *args):
         acsutil.Parser.__init__(self, *args)
         self.script = scr
@@ -124,8 +130,10 @@ class GotoParser(acsutil.Parser):
             yield l
         yield '}'
 
+
 class SwitchParserScript(GotoParser):
     spaces = '        '
+
     def goto_code(self, tgt):
         return 'goto_block = %d; restart' % tgt.id
 
@@ -146,13 +154,14 @@ class SwitchParserScript(GotoParser):
             yield '    int goto_block;'
             yield '    switch (goto_block) {'
 
-
     def suffix_code(self):
         if len(self.blocks) != 1:
             yield '    }'
 
+
 class SwitchParserFunction(GotoParser):
     spaces = '            '
+
     def goto_code(self, tgt):
         return 'goto_block = %d; continue' % tgt.id
 
@@ -175,6 +184,7 @@ class SwitchParserFunction(GotoParser):
 
         if not self.script.isvoid:
             yield '    return 0;'
+
 
 def declare_mapvars(acsf, seq):
     for var in seq:
@@ -209,12 +219,14 @@ def declare_vars(seq, type):
             arrdec = '[]'
         yield '%s int %d:%s%d%s;' % (type, var.id, type, var.id, arrdec)
 
+
 def getvars(acsf, type):
     vars = acsf.vars[type].vars
     varids = vars.keys()
     varids.sort()
     for id in varids:
         yield vars[id]
+
 
 def main():
     opts, args = options.parse_args()
@@ -236,7 +248,6 @@ def main():
     comment = ''
     if opts.comment:
         comment = '// '
-
 
     if opts.output:
         output = open(opts.output, 'w')
@@ -286,4 +297,3 @@ def main():
                 print >> output, '%s%s' % (comment, lin)
 
 main()
-

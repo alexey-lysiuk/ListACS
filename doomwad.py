@@ -34,9 +34,21 @@ _header = struct.Struct("<4sII")
 _dirent = struct.Struct("<II8s")
 
 # Map members
-specnames = set(('THINGS', 'VERTEXES','LINEDEFS', 'SIDEDEFS', 'SEGS',
-                 'SSECTORS', 'NODES', 'SECTORS', 'REJECT', 'BLOCKMAP',
-                 'BEHAVIOR', 'SCRIPTS'))
+specnames = {
+    'THINGS',
+    'VERTEXES',
+    'LINEDEFS',
+    'SIDEDEFS',
+    'SEGS',
+    'SSECTORS',
+    'NODES',
+    'SECTORS',
+    'REJECT',
+    'BLOCKMAP',
+    'BEHAVIOR',
+    'SCRIPTS'
+}
+
 
 class Lump(object):
     def __init__(self, name, data, index=None):
@@ -44,6 +56,7 @@ class Lump(object):
         self.data = data
         self.index = index
         self.marker = data == "" and name not in specnames
+
 
 class WadFile(object):
     def __init__(self, data_or_file):
@@ -55,7 +68,7 @@ class WadFile(object):
 
         sig, numentries, offset = _header.unpack(file.read(12))
 
-        if (sig != 'IWAD' and sig != 'PWAD'):
+        if sig != 'IWAD' and sig != 'PWAD':
             raise ValueError('not a WAD file')
 
         self.sig = sig
@@ -67,7 +80,7 @@ class WadFile(object):
 
         for i in xrange(numentries):
             pos = i * 16
-            offset, size, name = _dirent.unpack(direct[pos : pos + 16])
+            offset, size, name = _dirent.unpack(direct[pos: pos + 16])
             idx = name.find('\0')
             if idx != -1:
                 name = name[:idx]
@@ -135,9 +148,9 @@ class WadFile(object):
             self.lumps[i].index = i
 
     def removelump(self, lump):
-       idx = lump.index
-       self.lumps.remove(idx)
-       self._reindex(idx)
+        idx = lump.index
+        self.lumps.remove(idx)
+        self._reindex(idx)
 
     def insert(self, lump, before=None):
         idx = (before.index if before else len(self.lumps))
@@ -165,9 +178,8 @@ class WadFile(object):
         return iter(self.lumps)
 
 
-
-
 parsers = {}
+
 
 def readarray(stream, clas):
     if isinstance(stream, Lump):
@@ -186,15 +198,17 @@ def readarray(stream, clas):
         ret.append(clas.fromstr(dat))
     return ret
 
+
 def writearray(stream, array):
     for item in array:
         stream.write(str(item))
 
+
 def _defparser(name, sdef, *members):
     mstruct = struct.Struct(sdef)
-    class clas(object):
-        size = mstruct.size
 
+    class DataType(object):
+        size = mstruct.size
 
         def __init__(self, *args, **kwargs):
             for i, v in enumerate(args):
@@ -215,11 +229,12 @@ def _defparser(name, sdef, *members):
 
         @staticmethod
         def fromstr(string):
-            return clas(*mstruct.unpack(string[:mstruct.size]))
+            return DataType(*mstruct.unpack(string[:mstruct.size]))
 
-    clas.members = members
-    clas.__name__ = name
-    globals()[name] = clas
+    DataType.members = members
+    DataType.__name__ = name
+    globals()[name] = DataType
+
 
 # TODO: finish other structures
 _defparser('Vertex', '<hh', 'x', 'y')

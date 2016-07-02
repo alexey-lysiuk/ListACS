@@ -27,8 +27,7 @@
 
 """ZDoom ACS utilities"""
 
-import struct, sys
-import traceback
+import struct
 import copy
 
 from collections import deque
@@ -36,6 +35,7 @@ from collections import deque
 SIG_OLD = "ACS\0"
 SIG_NEW_LITTLE = "ACSe"
 SIG_NEW_BIG = "ACSE"
+
 
 def _fmtrw(fmt):
     str = struct.Struct("<" + fmt)
@@ -56,12 +56,13 @@ def _fmtrw(fmt):
         return unpack(dat)[0]
 
     def retg(dat, pos):
-        dat = dat[pos : pos + size]
+        dat = dat[pos: pos + size]
         if len(dat) < size:
             raise EOFError()
         return unpack(dat)[0]
 
     return retw, retr, retg
+
 
 writeub, readub, getub = _fmtrw("B")
 writeus, readus, getus = _fmtrw("H")
@@ -71,17 +72,15 @@ writesb, readsb, getsb = _fmtrw("b")
 writess, readss, getss = _fmtrw("h")
 writesi, readsi, getsi = _fmtrw("i")
 
+
 def getstr(data, pos, len):
-    return data[pos : pos + len]
+    return data[pos: pos + len]
+
 
 def escapestr(str):
     # ACC seems to store the strings raw
-
-    #str = str.replace('\\', '\\\\')
-    #str = str.replace('\n', '\\n')
-    #str = str.replace('\t', '\\t')
-    #str = str.replace('\"', '\\"')
     return '"%s"' % str
+
 
 def read_chunks(data, pos, end, markers):
     chunks = {}
@@ -90,10 +89,11 @@ def read_chunks(data, pos, end, markers):
         csize = getui(data, pos + 4)
         markers.append(Marker(pos, 'Chunk %r' % cid))
         pos += 8
-        chunks.setdefault(cid, []).append(data[pos : pos + csize])
+        chunks.setdefault(cid, []).append(data[pos: pos + csize])
         pos += csize
 
     return chunks
+
 
 def read_strings(data, pos, ipos):
     strings = []
@@ -104,13 +104,14 @@ def read_strings(data, pos, ipos):
 
         epos = data.find('\0', spos)
         if epos != -1:
-            cstr = data[spos : epos]
+            cstr = data[spos: epos]
         else:
             cstr = ''
         strings.append(cstr)
     return strings
 
-def read_array(data, scode, ipos = 0):
+
+def read_array(data, scode, ipos=0):
     if not data:
         return
     if isinstance(data, list):
@@ -123,8 +124,10 @@ def read_array(data, scode, ipos = 0):
         yield (i,) + struc.unpack(data[ipos: ipos + size])
         ipos += size
 
+
 class Marker(object):
     executable = False
+
     def __init__(self, ptr, label=None):
         self.label = label
         self.ptr = ptr
@@ -162,12 +165,13 @@ class Marker(object):
                 pass
             yield ''
 
-
     def getlabel(self):
         return self.label
 
+
 class Script(Marker):
     executable = True
+
     def __init__(self, ptr, num, type, argc):
         Marker.__init__(self, ptr)
         self.num = num
@@ -181,10 +185,9 @@ class Script(Marker):
         except IndexError:
             return "UNKNOWN"
 
-
     def getlabel(self):
         return 'script %d, type = %d (%s), flags = %04x, argc = %d' % \
-            (self.num, self.type, self.get_type(), self.flags, self.argc)
+               (self.num, self.type, self.get_type(), self.flags, self.argc)
 
     def getheader(self):
         if self.argc:
@@ -198,13 +201,15 @@ class Script(Marker):
             else:
                 argstr = self.get_type()
         return 'script %d %s // addr = %d, flags=%04x' % \
-            (self.num, argstr, self.ptr, self.flags)
+               (self.num, argstr, self.ptr, self.flags)
 
     def __repr__(self):
         return 'Script(%d, %d, %d, %d)' % (self.num, self.type, self.ptr, self.argc)
 
+
 class Function(Marker):
     executable = True
+
     def __init__(self, ptr, idx, argc, locals, hasreturn, importnum):
         Marker.__init__(self, ptr, 'function %d (%d, %d, %d) -> %d' %
                         (idx, argc, locals, importnum, hasreturn))
@@ -224,7 +229,7 @@ class Function(Marker):
         else:
             argstr = '(void)'
         return 'function %s func%d %s // addr = %d' % \
-            (('void' if self.isvoid else 'int'), self.idx, argstr, self.ptr)
+               (('void' if self.isvoid else 'int'), self.idx, argstr, self.ptr)
 
 
 class ScriptIO(object):
@@ -238,7 +243,7 @@ class ScriptIO(object):
     def read(self, n):
         addr = self.addr
         end = min(self.end, addr + n)
-        dat = self.data[addr : end]
+        dat = self.data[addr: end]
         self.addr = addr + len(dat)
         return dat
 
@@ -251,6 +256,7 @@ class ScriptIO(object):
     def wordalign(self):
         self.addr = (self.addr + 3) & ~3
 
+
 class ArrayInfo(object):
     """Describes an array read from an 'ARAY' chunk."""
 
@@ -262,6 +268,7 @@ class ArrayInfo(object):
     def __repr__(self):
         return 'Array(%d, %r)' % (self.index, self.elems)
 
+
 class VariableSet(object):
     def __init__(self, clas):
         self.vars = {}
@@ -272,6 +279,7 @@ class VariableSet(object):
             return self.vars[id]
         var = self.vars[id] = self.clas(id)
         return var
+
 
 class Behavior(object):
     """Parses a compiled ACS object."""
@@ -305,7 +313,6 @@ class Behavior(object):
                     datalen = dirofs - 1
         else:
             chunkofs = dirofs
-
 
         self.little = sig == SIG_NEW_LITTLE
 
@@ -360,20 +367,17 @@ class Behavior(object):
                     scriptnum[num] = cscript
                     markers.append(cscript)
 
-
             mvar_init_data = chunks.get('MINI', [None])[0]
             if mvar_init_data:
                 cvar = getui(mvar_init_data, 0)
                 for i, mvar in read_array(mvar_init_data, 'i', 4):
                     mapvars.getvar(i + cvar).initval = mvar
 
-
             for i, num, size in \
                     read_array(chunks.get('ARAY'), 'II'):
                 mvar = mapvars.getvar(num)
                 mvar.isarray = True
                 mvar.initval = [0] * size
-
 
             for idata in chunks.get('AINI', []):
                 anum = getui(idata, 0)
@@ -394,10 +398,9 @@ class Behavior(object):
                 except KeyError:
                     pass
 
-
         markers.append(Marker(len(data), 'End'))
 
-        markers.sort(key = lambda m: m.ptr)
+        markers.sort(key=lambda m: m.ptr)
 
         for p in xrange(len(markers) - 1):
             cc = markers[p]
@@ -432,25 +435,31 @@ class Behavior(object):
         except Exception:
             return str(val)
 
+
 class StackEmptyError(Exception):
     pass
 
 
 class StackItem(object):
     constval = None
+
     def constvalue(self):
         return self.constval
 
     _next = None
 
+
 class StackBottom(StackItem):
     pass
+
 
 stackbottom = StackBottom()
 StackBottom._next = stackbottom
 
+
 class StackMark(StackItem):
     pass
+
 
 class Expression(StackItem):
     _is_string = False
@@ -470,9 +479,11 @@ class Expression(StackItem):
     def put_block(self, p, block):
         block.put(self)
 
+
 class Block(Expression):
     label = None
     terminal = False
+
     def __init__(self, finish=None, *finish_args):
         self.statements = []
         self._finish = finish
@@ -501,16 +512,19 @@ class Block(Expression):
             for l in s.genlines(p):
                 yield l
 
+
 class Target(Expression):
     inst = None
     block = None
     entries = 1
     label = ''
+
     def __init__(self, addr):
         self.addr = addr
 
     def tocode(self, p):
         return p.goto_code(self)
+
 
 class Instruction(Expression):
     pcode = None
@@ -540,6 +554,7 @@ class Instruction(Expression):
 
     def normalize(self):
         return self
+
 
 class Parser(ScriptIO):
     use_goto = True
@@ -594,8 +609,6 @@ class Parser(ScriptIO):
         self.push(v1)
         self.push(v2)
 
-
-
     def run(self):
         q = self._queue
         while q:
@@ -607,13 +620,12 @@ class Parser(ScriptIO):
                 raise
 
     def queue(self, func, *args):
-        #print 'Queue %d' % self._qid
+        # print 'Queue %d' % self._qid
         if self._qid == 30000:
             print(len(self._queue))
             raise ValueError
         self._queue.append((self._qid, func, args))
         self._qid += 1
-
 
     def read_instruction(self, tgt, stacktop):
         addr = tgt.addr
@@ -638,7 +650,6 @@ class Parser(ScriptIO):
 
         instr = pcd.parse(self, addr)
         tgt.inst = instr
-
 
     def create_block(self, tgt, finish=None, *finish_args):
         if tgt.block:
@@ -671,6 +682,7 @@ class Parser(ScriptIO):
     def getstring(self, n):
         return self.behavior.strings[int(n)]
 
+
 class ConstantReference(Expression):
     def __init__(self, name, val):
         self.val = val
@@ -681,6 +693,7 @@ class ConstantReference(Expression):
 
     def tocode(self, p):
         return self.name
+
 
 class StringLiteral(Expression):
     def __init__(self, val, id):
@@ -699,6 +712,7 @@ class StringLiteral(Expression):
 
     def __repr__(self):
         return 'StringLiteral(%r)' % self.val
+
 
 class Literal(Expression):
     def __init__(self, val):
@@ -730,6 +744,7 @@ class Literal(Expression):
     def parse(cls, p, id):
         return cls(id)
 
+
 class ArrayIndex(Expression):
     def __init__(self, arr, index):
         Expression.__init__(self)
@@ -755,10 +770,12 @@ class ArrayIndex(Expression):
         avar.isarray = True
         return cls(avar, p.pop())
 
+
 class Variable(Expression):
     initval = 0
     can_be_array = True
     isarray = False
+
     def __init__(self, id):
         Expression.__init__(self)
         self.id = id
@@ -801,18 +818,20 @@ class LocalVar(Variable):
     def parse(cls, p, id):
         return p.lookuplocal(id)
 
+
 class MapVar(Variable):
     opname = 'MAP'
     type = 'map'
+
 
 class WorldVar(Variable):
     opname = 'WORLD'
     type = 'world'
 
+
 class GlobalVar(Variable):
     opname = 'GLOBAL'
     type = 'global'
-
 
 
 class Push(Instruction):
@@ -824,7 +843,8 @@ class Push(Instruction):
         Instruction.parse(self, p)
 
     def disassemble(self):
-        return '%s %s' %(self.pcode.name, ', '.join(v.disassemble() for v in self.values))
+        return '%s %s' % (self.pcode.name, ', '.join(v.disassemble() for v in self.values))
+
 
 class Assign(Instruction):
     _is_string = False
@@ -855,6 +875,7 @@ class Assign(Instruction):
         return '%s %s %s' % (self.dest.tocode(p), self.op,
                              self.val.tocode(p))
 
+
 class InPlaceUnary(Instruction):
     def parse(self, p, dargs, op, clas, *args):
         self.dest = clas.parse(p, dargs[0], *args)
@@ -871,6 +892,7 @@ class InPlaceUnary(Instruction):
 
     def tocode(self, p):
         return '%s%s' % (self.dest.tocode(p), self.op)
+
 
 bin_opers = {
     '+': lambda a, b: a + b,
@@ -899,8 +921,8 @@ unary_opers = {
     '-': lambda a: -a,
 }
 
-class BinOperator(Instruction):
 
+class BinOperator(Instruction):
     def parse(self, p, op):
         self.right = p.pop()
         self.left = p.pop()
@@ -920,6 +942,7 @@ class BinOperator(Instruction):
     def tocode(self, p):
         return '(%s %s %s)' % (self.left.tocode(p), self.op,
                                self.right.tocode(p))
+
 
 class UnaryOperator(Instruction):
     def parse(self, p, op):
@@ -949,8 +972,10 @@ class Comment(Expression):
     def __repr__(self):
         return 'Comment(%r)' % self.txt
 
+
 class Terminal(Instruction):
     void = True
+
     def parse(self, p, name):
         self.name = name
 
@@ -972,9 +997,11 @@ class Terminal(Instruction):
     def __eq__(self, o):
         return isinstance(o, Terminal) and self.name == o.name
 
+
 class Restart(Terminal):
     def tocode(self, p):
         return p.restart_code()
+
 
 class Goto(Instruction):
     def parse(self, p, dargs):
@@ -998,6 +1025,7 @@ class Goto(Instruction):
         self.next = next
         return next.inst
 
+
 class IfGoto(Instruction):
     neg = False
     nextblock = None
@@ -1011,15 +1039,15 @@ class IfGoto(Instruction):
 
     def parse_block(self, p, block):
         block.put(self)
-        #print 'ifgoto %d parse_block %d' % (self.addr, self.next.addr)
+        # print 'ifgoto %d parse_block %d' % (self.addr, self.next.addr)
         self.nextblock = p.create_sub_block(self.next, self.parse_tgtblock, p, block)
 
     def parse_tgtblock(self, p, block):
-        #print 'ifgoto %d parse_tgtblock %d' % (self.addr, self.target.addr)
+        # print 'ifgoto %d parse_tgtblock %d' % (self.addr, self.target.addr)
         self.tgtblock = p.create_sub_block(self.target, self.parse_finish, p, block)
 
     def parse_finish(self, p, block):
-        #print 'ifgoto %d parse_finish' % self.addr
+        # print 'ifgoto %d parse_finish' % self.addr
         nextblock = self.nextblock
         tgtblock = self.tgtblock
 
@@ -1030,18 +1058,17 @@ class IfGoto(Instruction):
             block.terminal = True
 
         elif nextblock.terminal:
-            #print 'next terminal:', self.next.addr
+            # print 'next terminal:', self.next.addr
             block.statements.extend(tgtstmts)
             tgtstmts[:] = []
 
         elif tgtblock.terminal:
-            #print 'tgt terminal:', self.target.addr
+            # print 'tgt terminal:', self.target.addr
             block.statements.extend(nextstmts)
             nextstmts[:] = []
         else:
             while nextstmts and tgtstmts and \
-                    nextstmts[-1] == tgtstmts[-1]:
-
+                            nextstmts[-1] == tgtstmts[-1]:
                 common_statements.append(nextstmts.pop())
                 tgtstmts.pop()
 
@@ -1052,7 +1079,7 @@ class IfGoto(Instruction):
         if common_statements:
             last = common_statements[-1]
             if isinstance(last, Target):
-                #print 'Combining block at %d (%d)' % (target.addr, target.entries)
+                # print 'Combining block at %d (%d)' % (target.addr, target.entries)
                 last.entries -= 1
                 if last.entries == 1:
                     common_statements.pop()
@@ -1081,7 +1108,6 @@ class IfGoto(Instruction):
         if ifblock.statements:
             yield 'if (%s) {' % self.stack.tocode(p)
 
-
             for l in ifblock.genlines(p):
                 yield '    ' + l
 
@@ -1096,19 +1122,20 @@ class IfGoto(Instruction):
                 yield '    ' + l
             yield '}'
 
-
-
     def disassemble(self):
         return self.pcode.name + ' %d' % self.target
 
+
 class IfNotGoto(IfGoto):
     neg = True
+
 
 class SwitchCase(object):
     def __init__(self, case, tgt):
         self.case = case
         self.target = tgt
         self.block = None
+
 
 class SwitchExpr(Expression):
     def __init__(self, switch):
@@ -1169,6 +1196,7 @@ class CaseGotoSorted(CaseGoto):
             self.switch.addcase(c, t)
             p.queue(p.read_instruction, t, p.top)
 
+
 class Drop(Instruction):
     def parse(self, p):
         p.pop()
@@ -1177,6 +1205,7 @@ class Drop(Instruction):
     def parse_block(self, p, block):
         self.stack.put_block(p, block)
         Instruction.parse_block(self, p, block)
+
 
 class DupInst(Instruction):
     def parse(self, p):
@@ -1190,10 +1219,12 @@ class TagString(Instruction):
         p.push(val.lookupstring(p))
         Instruction.parse(self, p)
 
+
 class SwapInst(Instruction):
     def parse(self, p):
         p.swap()
         Instruction.parse(self, p)
+
 
 class PrintExpr(Expression):
     def __init__(self):
@@ -1217,6 +1248,7 @@ class PrintExpr(Expression):
         self.name = name
         self.optargs = optargs
 
+
 class PrintItemExpr(Expression):
     def __init__(self, code, expr):
         self.code = code
@@ -1227,6 +1259,7 @@ class BeginPrint(Instruction):
     def parse(self, p):
         p.push(PrintExpr())
         Instruction.parse(self, p)
+
 
 class PrintItem(Instruction):
     def parse(self, p, code, *args):
@@ -1247,13 +1280,16 @@ class PrintItem(Instruction):
     def interpret(val, p):
         return val
 
+
 class PrintString(PrintItem):
     @staticmethod
     def interpret(val, p):
         return val.lookupstring(p)
 
+
 class PrintArray(PrintItem):
     pass
+
 
 class CreateTranslation(Instruction):
     def parse(self, p):
@@ -1266,6 +1302,7 @@ class CreateTranslation(Instruction):
         pi = PrintExpr()
         pi.append(p.pop())
         p.push(pi)
+
 
 class TranslationRange(Instruction):
     def tocode(self, p):
@@ -1283,8 +1320,10 @@ class TranslationRange(Instruction):
             pass
         Instruction.parse(self, p)
 
+
 class EndPrint(Instruction):
     name = 'Unknown'
+
     def parse(self, p, name):
         self.name = name
         self.pi = p.pop()
@@ -1303,6 +1342,7 @@ class OptHudMessage(Instruction):
     def parse(self, p):
         p.push(StackMark())
         Instruction.parse(self, p)
+
 
 class HudMessage(Instruction):
     def parse(self, p, name):
@@ -1332,10 +1372,11 @@ class HudMessage(Instruction):
         block.put(self.pi)
         Instruction.parse_block(self, p, block)
 
+
 class Call(Instruction):
     def tocode(self, p):
-        return'func%d(%s)' % (self.funcnum,
-                              ', '.join(e.tocode(p) for e in self.args))
+        return 'func%d(%s)' % (self.funcnum,
+                               ', '.join(e.tocode(p) for e in self.args))
 
     def parse(self, p, inst_args, wantresult):
         funcnum = inst_args[0]
@@ -1356,21 +1397,26 @@ class Call(Instruction):
     def disassemble(self):
         return '%s %d' % (self.pcode.name, self.funcnum)
 
+
 class ReturnVoid(Terminal):
     def tocode(self, p):
         if not self.void:
             return 'return %s' % self.stack.tocode(p)
         return 'return'
 
+
 class Return(ReturnVoid):
     void = False
+
 
 class ArgumentInterpreter(object):
     def convert(self, p, args):
         for val in args:
             yield val
 
+
 default_interp = ArgumentInterpreter()
+
 
 class ConvStrings(ArgumentInterpreter):
     def __init__(self, *indices):
@@ -1384,6 +1430,7 @@ class ConvStrings(ArgumentInterpreter):
                 except Exception:
                     pass
             yield val
+
 
 class ActorPropArgs(ArgumentInterpreter):
     def convert(self, p, args):
@@ -1406,6 +1453,7 @@ class ActorPropArgs(ArgumentInterpreter):
 
         for i in args[2:]:
             yield val
+
 
 class BuiltinCall(Instruction):
     def tocode(self, p):
@@ -1441,6 +1489,7 @@ class BuiltinCall(Instruction):
             return '%s(%s) -> %d' % (self.name, ', '.join('%d' % v.val for v in self.args), int(not self.void))
         return '%s([%d]) -> %d' % (self.name, len(self.args), int(not self.void))
 
+
 class LineSpec(BuiltinCall):
     def parse(self, p, inst_args, nargs, void=True):
         self.lspec = inst_args[0]
@@ -1456,6 +1505,7 @@ class LineSpec(BuiltinCall):
         else:
             BuiltinCall.parse(self, p, nargs, void, specname)
 
+
 class ArgCode(object):
     def __init__(self):
         pass
@@ -1465,6 +1515,7 @@ class ArgCode(object):
 
     def disassemble(self, s):
         return ()
+
 
 class IntegerArgCode(ArgCode):
     def __init__(self, lfunc, bfunc=None):
@@ -1476,6 +1527,7 @@ class IntegerArgCode(ArgCode):
 
     def disassemble(self, s):
         return ('%d' % self.parse(s),)
+
 
 class VarArgCode(ArgCode):
     def _parse(self, s):
@@ -1489,6 +1541,7 @@ class VarArgCode(ArgCode):
     def disassemble(self, s):
         for i in self._parse(s):
             yield '%d' % s
+
 
 class JumpTargetArgCode(ArgCode):
     def parse(self, s):
@@ -1508,6 +1561,7 @@ argcodes = dict(
     b=IntegerArgCode(readsb),
     J=JumpTargetArgCode())
 
+
 class PCode(object):
     def __init__(self, name, clas, *args):
         self.name = name
@@ -1524,6 +1578,7 @@ class PCode(object):
 
     def disassemble(self, s):
         return self.name
+
 
 class ArgPCode(PCode):
     def __init__(self, name, codes, clas, *args):
@@ -1545,6 +1600,7 @@ class ArgPCode(PCode):
     def disassemble(self, s):
         return '%s %s' % (self.name, ', '.join(self.getargs(s)))
 
+
 class CasePCode(PCode):
     def parse(self, p, addr):
         p.wordalign()
@@ -1559,6 +1615,7 @@ class CasePCode(PCode):
         s.wordalign()
         numcases = readui(s)
         return self.name + ' ' + ', '.join('%d: %d' % (readui(s), readui(s) - s.begin) for i in xrange(numcases))
+
 
 class PushBytesPCode(PCode):
     def parse(self, p, addr):
@@ -1576,7 +1633,6 @@ class PushBytesPCode(PCode):
 
     def disassemble(self, s):
         return '%s %s' % (self.name, ', '.join(self.getargs(s)))
-
 
 
 def genpcodes():
@@ -1604,27 +1660,26 @@ def genpcodes():
         builtin_direct(name, arg, void, interp)
 
     pcodenames = {}
+
     def byname(name):
         addpcode(pcodenames[name])
 
-
-
-    pcode ('NOP', Instruction)
+    pcode('NOP', Instruction)
 
     builtin_stack('Suspend', 0)
-    pcode ('TERMINATE', Terminal, 'Terminate')
-    pcode ('RESTART', Restart, 'Restart')
+    pcode('TERMINATE', Terminal, 'Terminate')
+    pcode('RESTART', Restart, 'Restart')
 
     # Functions
     apcode('CALL', 'V', Call, True)
     apcode('CALLDISCARD', 'V', Call, False)
-    pcode ('RETURNVOID', ReturnVoid, 'return')
-    pcode ('RETURNVAL', Return, 'return')
+    pcode('RETURNVOID', ReturnVoid, 'return')
+    pcode('RETURNVAL', Return, 'return')
 
     # Stack ops
-    pcode ('DUP', DupInst)
-    pcode ('SWAP', SwapInst)
-    pcode ('TAGSTRING', TagString)
+    pcode('DUP', DupInst)
+    pcode('SWAP', SwapInst)
+    pcode('TAGSTRING', TagString)
 
     apcode('PUSHNUMBER', 'I', Push, Literal)
     apcode('PUSHBYTE', 'B', Push, Literal)
@@ -1642,7 +1697,6 @@ def genpcodes():
     apcode('PUSH4BYTES', 'BBBB', Push, Literal)
     apcode('PUSH5BYTES', 'BBBBB', Push, Literal)
 
-
     apcode('LSPEC1', 'V', LineSpec, 1)
     apcode('LSPEC2', 'V', LineSpec, 2)
     apcode('LSPEC3', 'V', LineSpec, 3)
@@ -1657,30 +1711,28 @@ def genpcodes():
     apcode('LSPEC6DIRECT', 'VIIIIII', LineSpec, 0)
     apcode('LSPEC5RESULT', 'V', LineSpec, 5, False)
 
-
     # Math
-    pcode ('ADD', BinOperator, '+')
-    pcode ('SUBTRACT', BinOperator, '-')
-    pcode ('MULTIPLY', BinOperator, '*')
-    pcode ('DIVIDE', BinOperator, '/')
-    pcode ('MODULUS', BinOperator, '%')
-    pcode ('EQ', BinOperator, '==')
-    pcode ('NE', BinOperator, '!=')
-    pcode ('LT', BinOperator, '<')
-    pcode ('GT', BinOperator, '>')
-    pcode ('LE', BinOperator, '<=')
-    pcode ('GE', BinOperator, '>=')
-    pcode ('ANDLOGICAL', BinOperator, '&&')
-    pcode ('ORLOGICAL', BinOperator, '||')
-    pcode ('ANDBITWISE', BinOperator, '&')
-    pcode ('ORBITWISE', BinOperator, '|')
-    pcode ('EORBITWISE', BinOperator, '^')
-    pcode ('NEGATELOGICAL', UnaryOperator, '!')
-    pcode ('NEGATEBINARY', UnaryOperator, '~')
-    pcode ('LSHIFT', BinOperator, '<<')
-    pcode ('RSHIFT', BinOperator, '>>')
-    pcode ('UNARYMINUS', UnaryOperator, '-')
-
+    pcode('ADD', BinOperator, '+')
+    pcode('SUBTRACT', BinOperator, '-')
+    pcode('MULTIPLY', BinOperator, '*')
+    pcode('DIVIDE', BinOperator, '/')
+    pcode('MODULUS', BinOperator, '%')
+    pcode('EQ', BinOperator, '==')
+    pcode('NE', BinOperator, '!=')
+    pcode('LT', BinOperator, '<')
+    pcode('GT', BinOperator, '>')
+    pcode('LE', BinOperator, '<=')
+    pcode('GE', BinOperator, '>=')
+    pcode('ANDLOGICAL', BinOperator, '&&')
+    pcode('ORLOGICAL', BinOperator, '||')
+    pcode('ANDBITWISE', BinOperator, '&')
+    pcode('ORBITWISE', BinOperator, '|')
+    pcode('EORBITWISE', BinOperator, '^')
+    pcode('NEGATELOGICAL', UnaryOperator, '!')
+    pcode('NEGATEBINARY', UnaryOperator, '~')
+    pcode('LSHIFT', BinOperator, '<<')
+    pcode('RSHIFT', BinOperator, '>>')
+    pcode('UNARYMINUS', UnaryOperator, '-')
 
     # Variables
     opsym = dict(ADD='+=', SUB='-=', MUL='*=', DIV='/=', MOD='%=',
@@ -1705,20 +1757,15 @@ def genpcodes():
             for nm, op in uopsym.iteritems():
                 apcode(nm + vt.opname + 'ARRAY', 'V', InPlaceUnary, op, ArrayIndex, vt)
 
-
             apcode('PUSH' + vt.opname + 'ARRAY', 'V', Push, ArrayIndex, vt)
-
-
 
     # Branches
     apcode('GOTO', 'J', Goto)
     apcode('IFGOTO', 'J', IfGoto)
-    pcode ('DROP', Drop)
+    pcode('DROP', Drop)
     apcode('CASEGOTO', 'IJ', CaseGoto)
     apcode('IFNOTGOTO', 'J', IfNotGoto)
     addpcode(CasePCode('CASEGOTOSORTED', CaseGotoSorted))
-
-
 
     # Builtins
     builtin_both('Delay', 1, True)
@@ -1802,7 +1849,7 @@ def genpcodes():
     builtin_stack('GetPlayerInfo', 2, False)
     builtin_stack('ChangeLevel', 4, True, ConvStrings(0))
     builtin_stack('SectorDamage', 5, True, ConvStrings(2))
-    builtin_stack('ReplaceTextures', 3, True, ConvStrings(0,1))
+    builtin_stack('ReplaceTextures', 3, True, ConvStrings(0, 1))
     builtin_stack('GetActorPitch', 1, False)
     builtin_stack('SetActorPitch', 2, True)
     builtin_stack('SetActorState', 3, False, ConvStrings(1))
@@ -2019,7 +2066,6 @@ pcode_names = [
     'GETPLAYERINPUT', 'CLASSIFYACTOR', 'PRINTBINARY',
     'PRINTHEX']
 
-
 linespecials = [
     None, None, 'Polyobj_RotateLeft',
     'Polyobj_RotateRight', 'Polyobj_Move', None, 'Polyobj_MoveTimes8',
@@ -2114,7 +2160,7 @@ script_types = [
     "UNLOADING",
     "DISCONNECT",
     "RETURN"
-    ]
+]
 
 aprop_names = [
     ('APROP_Health', False),
@@ -2135,7 +2181,7 @@ aprop_names = [
     ('APROP_PainSound', True),
     ('APROP_DeathSound', True),
     ('APROP_ActiveSound', True),
-    ]
+]
 
 pcode_index = {}
 g = globals()
