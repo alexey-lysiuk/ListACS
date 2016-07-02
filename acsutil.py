@@ -29,6 +29,7 @@
 
 import struct
 import copy
+import sys
 
 from collections import deque
 
@@ -109,6 +110,19 @@ def read_strings(data, pos, ipos):
             cstr = ''
         strings.append(cstr)
     return strings
+
+
+def find_strings_pos(data, pos):
+    numstrings = getui(data, pos)
+    pos += 4
+
+    result = sys.maxint
+
+    for _ in xrange(numstrings):
+        result = min(getui(data, pos), result)
+        pos += 4
+
+    return result
 
 
 def read_array(data, scode, ipos=0):
@@ -338,6 +352,10 @@ class Behavior(object):
             stringtable = dirofs + getui(data, dirofs) * 12 + 4
             strings = read_strings(data, stringtable, stringtable + 4)
             markers.append(Marker(stringtable, 'String table'))
+
+            stringspos = find_strings_pos(data, stringtable)
+            if stringspos < sys.maxint:
+                markers.append(Marker(stringspos, 'Strings'))
         else:
             chunks = read_chunks(data, chunkofs, datalen, markers)
             estrings = chunks.get('STRE')
