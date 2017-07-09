@@ -1707,7 +1707,7 @@ def genpcodes():
     apcode('LSPEC4DIRECTB', 'VBBBB', LineSpec, 0)
     apcode('LSPEC5DIRECTB', 'VBBBBB', LineSpec, 0)
     apcode('DELAYDIRECTB', 'B', BuiltinCall, True, 'Delay')
-    apcode('RANDOMDIRECTB', 'BB', BuiltinCall, True, 'Random')
+    apcode('RANDOMDIRECTB', 'BB', BuiltinCall, False, 'Random')
 
     addpcode(PushBytesPCode('PUSHBYTES', Push, Literal))
     apcode('PUSH2BYTES', 'BB', Push, Literal)
