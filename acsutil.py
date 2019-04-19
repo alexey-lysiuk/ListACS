@@ -1690,7 +1690,7 @@ def genpcodes():
 
     # Functions
     apcode('CALL', 'V', Call, True)
-    apcode('CALLDISCARD', 'V', Call, False)
+    apcode('CALLDISCARD', 'V', Call, True)
     pcode('RETURNVOID', ReturnVoid, 'return')
     pcode('RETURNVAL', Return, 'return')
 
