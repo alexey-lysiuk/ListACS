@@ -868,9 +868,9 @@ class Assign(Instruction):
     _is_string = False
 
     def parse(self, p, dargs, op, clas, *args):
+        self.val = p.pop()
         self.dest = clas.parse(p, dargs[0], *args)
         self.op = op
-        self.val = p.pop()
 
         if op == '=':
             self.dest.assignedby(p, self)
