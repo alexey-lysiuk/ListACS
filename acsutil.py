@@ -1455,25 +1455,25 @@ class ConvStrings(ArgumentInterpreter):
 
 class ActorPropArgs(ArgumentInterpreter):
     def convert(self, p, args):
-        val = args[0]
+        val1 = args[0]
         valstring = False
-        if isinstance(val, Literal):
+        if isinstance(val1, Literal):
             try:
-                nm, valstring = aprop_names[val.val]
-                val = ConstantReference(nm, val.val)
+                name, valstring = aprop_names[val1.val]
+                val1 = ConstantReference(name, val1.val)
             except Exception:
                 pass
 
-        yield val
 
-        val = args[1]
+        val2 = args[1]
         if valstring:
-            val = val.lookupstring(val)
+            val2 = val2.lookupstring(val2)
 
-        yield val
+        yield val2
+        yield val1
 
         for i in args[2:]:
-            yield val
+            yield i
 
 
 class BuiltinCall(Instruction):
