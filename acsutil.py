@@ -2185,12 +2185,21 @@ script_types = [
     "RETURN"
 ]
 
+#Actors properties
+#References:
+# - for the index order: https://github.com/rheit/zdoom/blob/master/src/p_acs.cpp#L3615
+# - for property type : https://zdoom.org/wiki/CheckActorProperty
 aprop_names = [
     ('APROP_Health', False),
     ('APROP_Speed', False),
     ('APROP_Damage', False),
     ('APROP_Alpha', False),
     ('APROP_RenderStyle', False),
+    ('APROP_SeeSound', True),
+    ('APROP_AttackSound', True),
+    ('APROP_PainSound', True),
+    ('APROP_DeathSound', True),
+    ('APROP_ActiveSound', True),
     ('APROP_Ambush', False),
     ('APROP_Invulnerable', False),
     ('APROP_JumpZ', False),
@@ -2199,11 +2208,36 @@ aprop_names = [
     ('APROP_Gravity', False),
     ('APROP_Friendly', False),
     ('APROP_SpawnHealth', False),
-    ('APROP_SeeSound', True),
-    ('APROP_AttackSound', True),
-    ('APROP_PainSound', True),
-    ('APROP_DeathSound', True),
-    ('APROP_ActiveSound', True),
+    ('APROP_Dropped', False),
+    ('APROP_Notarget', False),
+    ('APROP_Species', True),
+    ('APROP_NameTag', True),
+    ('APROP_Score', False),
+    ('APROP_Notrigger', False),
+    ('APROP_DamageFactor', False),
+    ('APROP_MasterTID', False),
+    ('APROP_TargetTID', False),
+    ('APROP_TracerTID', False),
+    ('APROP_WaterLevel', False),
+    ('APROP_ScaleX', False),
+    ('APROP_ScaleY', False),
+    ('APROP_Dormant', False),
+    ('APROP_Mass', False),
+    ('APROP_Accuracy', False),
+    ('APROP_Dormant', False),
+    ('APROP_Stamina', False),
+    ('APROP_Height', False),
+    ('APROP_Radius', False),
+    ('APROP_ReactionTime', False),
+    ('APROP_MeleeRange', False),
+    ('APROP_ViewHeight', False),
+    ('APROP_AttackZOffset', False),
+    ('APROP_StencilColor', False),
+    ('APROP_Friction', False),
+    ('APROP_DamageMultiplier', False),
+    ('APROP_MaxStepHeight', False),
+    ('APROP_MaxDropOffHeight', False),
+    ('APROP_DamageType', True),
 ]
 
 pcode_index = {}
