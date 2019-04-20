@@ -1694,6 +1694,7 @@ def genpcodes():
     # Functions
     apcode('CALL', 'V', Call, True)
     apcode('CALLDISCARD', 'V', Call, False)
+    apcode('CALLFUNC', 'V', Call, True)
     pcode('RETURNVOID', ReturnVoid, 'return')
     pcode('RETURNVAL', Return, 'return')
 
@@ -1937,6 +1938,7 @@ def genpcodes():
     builtin_stack('ThingCountName', 2, False, ConvStrings(0))
     builtin_stack('SpawnSpotFacing', 3, False, ConvStrings(0))
     builtin_stack('PlayerClass', 1, False)
+    builtin_stack('StrParam', 1, False)
 
     pcode('STARTTRANSLATION', CreateTranslation)
     pcode('TRANSLATIONRANGE1', TranslationRange, 4)
@@ -2085,7 +2087,7 @@ pcode_names = [
     'THINGCOUNTSECTOR', 'THINGCOUNTNAMESECTOR',
     'CHECKPLAYERCAMERA', 'MORPHACTOR', 'UNMORPHACTOR',
     'GETPLAYERINPUT', 'CLASSIFYACTOR', 'PRINTBINARY',
-    'PRINTHEX']
+    'PRINTHEX','CALLFUNC','STRPARAM']
 
 linespecials = [
     None, None, 'Polyobj_RotateLeft',
