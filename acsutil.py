@@ -1411,6 +1411,8 @@ class Call(Instruction):
         Instruction.parse(self, p)
 
     def parse_block(self, p, block):
+        if(not(self.wantresult)):
+            block.put(self)
         Instruction.parse_block(self, p, block)
 
     def disassemble(self):
@@ -1691,7 +1693,7 @@ def genpcodes():
 
     # Functions
     apcode('CALL', 'V', Call, True)
-    apcode('CALLDISCARD', 'V', Call, True)
+    apcode('CALLDISCARD', 'V', Call, False)
     pcode('RETURNVOID', ReturnVoid, 'return')
     pcode('RETURNVAL', Return, 'return')
 
