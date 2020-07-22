@@ -98,7 +98,7 @@ class GotoParser(acsutil.Parser):
 
     def gen_code(self):
         addrs = self.targets.keys()
-        addrs.sort()
+        sorted(addrs)
         self.blocks = blocks = []
         for i, a in enumerate(addrs):
             tgt = self.targets[a]
@@ -223,8 +223,7 @@ def declare_vars(seq, type):
 def getvars(acsf, type):
     vars = acsf.vars[type].vars
     varids = vars.keys()
-    varids.sort()
-    for id in varids:
+    for id in sorted(varids):
         yield vars[id]
 
 
