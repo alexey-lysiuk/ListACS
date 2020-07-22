@@ -28,7 +28,7 @@
 """Read and write Doom WAD files"""
 
 import struct
-from cStringIO import StringIO
+from io import StringIO
 
 _header = struct.Struct("<4sII")
 _dirent = struct.Struct("<II8s")

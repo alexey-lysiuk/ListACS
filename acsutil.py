@@ -634,7 +634,7 @@ class Parser(ScriptIO):
             try:
                 func(*args)
             except:
-                print '<failed id was %d>' % id
+                print('<failed id was %d>' % id)
                 raise
 
     def queue(self, func, *args):
@@ -1765,18 +1765,18 @@ def genpcodes():
     vartypes = [LocalVar, MapVar, WorldVar, GlobalVar]
 
     for vt in vartypes:
-        for nm, op in opsym.iteritems():
+        for nm, op in opsym.items():
             apcode(nm + vt.opname + 'VAR', 'V', Assign, op, vt)
 
-        for nm, op in uopsym.iteritems():
+        for nm, op in uopsym.items():
             apcode(nm + vt.opname + 'VAR', 'V', InPlaceUnary, op, vt)
 
         apcode('PUSH' + vt.opname + 'VAR', 'V', Push, vt)
         if vt.can_be_array:
-            for nm, op in opsym.iteritems():
+            for nm, op in opsym.items():
                 apcode(nm + vt.opname + 'ARRAY', 'V', Assign, op, ArrayIndex, vt)
 
-            for nm, op in uopsym.iteritems():
+            for nm, op in uopsym.items():
                 apcode(nm + vt.opname + 'ARRAY', 'V', InPlaceUnary, op, ArrayIndex, vt)
 
             apcode('PUSH' + vt.opname + 'ARRAY', 'V', Push, ArrayIndex, vt)
