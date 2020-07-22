@@ -88,7 +88,7 @@ def read_chunks(data, pos, end, markers):
     while pos < end:
         cid = getstr(data, pos, 4)
         csize = getui(data, pos + 4)
-        markers.append(Marker(pos, 'Chunk %r' % cid))
+        markers.append(Marker(pos, 'Chunk %r' % str(cid, encoding='ascii', errors='ignore')))
         pos += 8
         chunks.setdefault(cid, []).append(data[pos: pos + csize])
         pos += csize
@@ -133,7 +133,7 @@ def read_array(data, scode, ipos=0):
 
     struc = struct.Struct('<' + scode)
     size = struc.size
-    cnt = (len(data) - ipos) / size
+    cnt = (len(data) - ipos) // size
     for i in range(cnt):
         yield (i,) + struc.unpack(data[ipos: ipos + size])
         ipos += size
@@ -358,14 +358,14 @@ class Behavior(object):
                 markers.append(Marker(stringspos, 'Strings'))
         else:
             chunks = read_chunks(data, chunkofs, datalen, markers)
-            estrings = chunks.get('STRE')
-            ustrings = chunks.get('STRL')
+            estrings = chunks.get(b'STRE')
+            ustrings = chunks.get(b'STRL')
 
             if ustrings:
                 strings = read_strings(ustrings[0], 4, 12)
 
             for i, argcount, localcount, hasreturnval, importnum, ptr in \
-                    read_array(chunks.get('FUNC'), 'BBBBI'):
+                    read_array(chunks.get(b'FUNC'), 'BBBBI'):
                 cfunc = Function(ptr, len(functions), argcount, localcount,
                                  hasreturnval, importnum)
 
@@ -374,30 +374,30 @@ class Behavior(object):
 
             if is_intermediate:
                 for i, num, type, addr, argc in \
-                        read_array(chunks.get('SPTR'), 'HHII'):
+                        read_array(chunks.get(b'SPTR'), 'HHII'):
                     cscript = Script(addr, num, type, argc)
                     scriptnum[num] = cscript
                     markers.append(cscript)
             else:
                 for i, num, type, argc, addr in \
-                        read_array(chunks.get('SPTR'), 'HBBI'):
+                        read_array(chunks.get(b'SPTR'), 'HBBI'):
                     cscript = Script(addr, num, type, argc)
                     scriptnum[num] = cscript
                     markers.append(cscript)
 
-            mvar_init_data = chunks.get('MINI', [None])[0]
+            mvar_init_data = chunks.get(b'MINI', [None])[0]
             if mvar_init_data:
                 cvar = getui(mvar_init_data, 0)
                 for i, mvar in read_array(mvar_init_data, 'i', 4):
                     mapvars.getvar(i + cvar).initval = mvar
 
             for i, num, size in \
-                    read_array(chunks.get('ARAY'), 'II'):
+                    read_array(chunks.get(b'ARAY'), 'II'):
                 mvar = mapvars.getvar(num)
                 mvar.isarray = True
                 mvar.initval = [0] * size
 
-            for idata in chunks.get('AINI', []):
+            for idata in chunks.get(b'AINI', []):
                 anum = getui(idata, 0)
                 try:
                     mvar = mapvars.getvar(anum)
@@ -409,7 +409,7 @@ class Behavior(object):
                     pass
 
             for i, num, flags in \
-                    read_array(chunks.get('SFLG'), 'HH'):
+                    read_array(chunks.get(b'SFLG'), 'HH'):
 
                 try:
                     scriptnum[num].flags = flags
