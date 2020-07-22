@@ -255,10 +255,10 @@ def main():
         output = sys.stdout
 
     if opts.strings:
-        print >> output, '%sStrings:' % comment
+        print('%sStrings:' % comment, file=output)
         for i, s in enumerate(acsf.strings):
-            print >> output, '%s  %3d: %r' % (comment, i, s)
-        print >> output
+            print('%s  %3d: %r' % (comment, i, s), file=output)
+        print('', file=output)
 
     if opts.decompile:
         parsers = []
@@ -272,28 +272,28 @@ def main():
                     p = SwitchParserFunction(m, acsf)
                 parsers.append(p)
 
-        print >> output, '#include "zcommon.acs"'
-        print >> output
+        print('#include "zcommon.acs"', file=output)
+        print('', file=output)
         for l in declare_vars(getvars(acsf, 'global'), 'global'):
-            print >> output,  l
+            print(l, file=output)
 
         for l in declare_vars(getvars(acsf, 'world'), 'world'):
-            print >> output, l
+            print(l, file=output)
 
         for l in declare_mapvars(acsf, getvars(acsf, 'map')):
-            print >> output, l
-        print >> output
+            print(l, file=output)
+        print('', file=output)
 
         for p in parsers:
             for l in p.gen_code():
-                print >> output, l
+                print(l, file=output)
     else:
         if opts.vars:
             for l in declare_mapvars(acsf, getvars(acsf, 'map')):
-                print >> output, l
-            print >> output
+                print(l, file=output)
+            print('', file=output)
         for m in acsf.markers:
             for lin in m.disassemble():
-                print >> output, '%s%s' % (comment, lin)
+                print('%s%s' % (comment, lin), file=output)
 
 main()

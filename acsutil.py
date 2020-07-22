@@ -420,7 +420,7 @@ class Behavior(object):
 
         markers.sort(key=lambda m: m.ptr)
 
-        for p in xrange(len(markers) - 1):
+        for p in range(len(markers) - 1):
             cc = markers[p]
             cc.end = markers[p + 1].ptr
             cc.data = data
