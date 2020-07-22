@@ -33,9 +33,9 @@ import sys
 
 from collections import deque
 
-SIG_OLD = "ACS\0"
-SIG_NEW_LITTLE = "ACSe"
-SIG_NEW_BIG = "ACSE"
+SIG_OLD = b'ACS\0'
+SIG_NEW_LITTLE = b'ACSe'
+SIG_NEW_BIG = b'ACSE'
 
 
 def _fmtrw(fmt):
@@ -103,7 +103,7 @@ def read_strings(data, pos, ipos):
         spos = getui(data, ipos)
         ipos += 4
 
-        epos = data.find('\0', spos)
+        epos = data.find(b'\0', spos)
         if epos != -1:
             cstr = data[spos: epos]
         else:
@@ -116,7 +116,7 @@ def find_strings_pos(data, pos):
     numstrings = getui(data, pos)
     pos += 4
 
-    result = sys.maxint
+    result = -1
 
     for _ in range(numstrings):
         result = min(getui(data, pos), result)
@@ -315,6 +315,8 @@ class Behavior(object):
         dirofs = getui(data, 4)
         self.markers = markers = []
         is_intermediate = True
+        chunkofs = dirofs
+
         if sig == SIG_OLD:
             is_intermediate = False
 
@@ -325,8 +327,6 @@ class Behavior(object):
                     sig = pretag
                     chunkofs = getui(data, dirofs - 8)
                     datalen = dirofs - 1
-        else:
-            chunkofs = dirofs
 
         self.little = sig == SIG_NEW_LITTLE
 
@@ -342,7 +342,7 @@ class Behavior(object):
                 ipos += 12
 
                 num = snum % 1000
-                type = snum / 1000
+                type = snum // 1000
                 cscript = Script(ptr, num, type, argc)
                 scripts.append(cscript)
                 markers.append(cscript)
@@ -354,7 +354,7 @@ class Behavior(object):
             markers.append(Marker(stringtable, 'String table'))
 
             stringspos = find_strings_pos(data, stringtable)
-            if stringspos < sys.maxint:
+            if stringspos != -1:
                 markers.append(Marker(stringspos, 'Strings'))
         else:
             chunks = read_chunks(data, chunkofs, datalen, markers)
