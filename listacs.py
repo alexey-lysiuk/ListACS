@@ -296,4 +296,9 @@ def main():
             for lin in m.disassemble():
                 print('%s%s' % (comment, lin), file=output)
 
+
+if sys.hexversion < 0x3070000:
+    print('This script requires Python 3.7 or newer')
+    exit(1)
+
 main()
