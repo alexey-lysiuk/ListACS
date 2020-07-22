@@ -78,7 +78,7 @@ class WadFile(object):
 
         lumps = []
 
-        for i in xrange(numentries):
+        for i in range(numentries):
             pos = i * 16
             offset, size, name = _dirent.unpack(direct[pos: pos + 16])
             idx = name.find('\0')
@@ -144,7 +144,7 @@ class WadFile(object):
         return None
 
     def _reindex(self, start=0):
-        for i in xrange(start, len(self.lumps)):
+        for i in range(start, len(self.lumps)):
             self.lumps[i].index = i
 
     def removelump(self, lump):

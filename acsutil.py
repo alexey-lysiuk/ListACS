@@ -99,7 +99,7 @@ def read_chunks(data, pos, end, markers):
 def read_strings(data, pos, ipos):
     strings = []
     numstrings = getui(data, pos)
-    for i in xrange(numstrings):
+    for i in range(numstrings):
         spos = getui(data, ipos)
         ipos += 4
 
@@ -118,7 +118,7 @@ def find_strings_pos(data, pos):
 
     result = sys.maxint
 
-    for _ in xrange(numstrings):
+    for _ in range(numstrings):
         result = min(getui(data, pos), result)
         pos += 4
 
@@ -134,7 +134,7 @@ def read_array(data, scode, ipos=0):
     struc = struct.Struct('<' + scode)
     size = struc.size
     cnt = (len(data) - ipos) / size
-    for i in xrange(cnt):
+    for i in range(cnt):
         yield (i,) + struc.unpack(data[ipos: ipos + size])
         ipos += size
 
@@ -205,7 +205,7 @@ class Script(Marker):
 
     def getheader(self):
         if self.argc:
-            argstr = '(%s)' % ', '.join('int local%d' % i for i in xrange(self.argc))
+            argstr = '(%s)' % ', '.join('int local%d' % i for i in range(self.argc))
         else:
             argstr = '(void)'
 
@@ -239,7 +239,7 @@ class Function(Marker):
     def getheader(self):
         firstvar = 0
         if self.argc:
-            argstr = '(%s)' % ', '.join('int local%d' % i for i in xrange(self.argc))
+            argstr = '(%s)' % ', '.join('int local%d' % i for i in range(self.argc))
         else:
             argstr = '(void)'
         return 'function %s func%d %s // addr = %d' % \
@@ -335,7 +335,7 @@ class Behavior(object):
             numscripts = getui(data, dirofs)
             ipos = dirofs + 4
 
-            for i in xrange(numscripts):
+            for i in range(numscripts):
                 snum = getui(data, ipos)
                 ptr = getui(data, ipos + 4)
                 argc = getui(data, ipos + 8)
@@ -608,7 +608,7 @@ class Parser(ScriptIO):
             return top
 
         ret = [None] * n
-        for i in xrange(n - 1, -1, -1):
+        for i in range(n - 1, -1, -1):
             ret[i] = self.pop()
         return ret
 
@@ -1553,7 +1553,7 @@ class IntegerArgCode(ArgCode):
 class VarArgCode(ArgCode):
     def _parse(self, s):
         cnt = readub(s)
-        for i in xrange(cnt):
+        for i in range(cnt):
             yield readub(s)
 
     def parse(self, s):
@@ -1626,7 +1626,7 @@ class CasePCode(PCode):
     def parse(self, p, addr):
         p.wordalign()
         numcases = readui(p)
-        cases = [(readui(p), readui(p)) for i in xrange(numcases)]
+        cases = [(readui(p), readui(p)) for i in range(numcases)]
 
         ret = self.create(p, addr)
         ret.parse(p, cases, *self.args)
@@ -1635,13 +1635,13 @@ class CasePCode(PCode):
     def disassemble(self, s):
         s.wordalign()
         numcases = readui(s)
-        return self.name + ' ' + ', '.join('%d: %d' % (readui(s), readui(s) - s.begin) for i in xrange(numcases))
+        return self.name + ' ' + ', '.join('%d: %d' % (readui(s), readui(s) - s.begin) for i in range(numcases))
 
 
 class PushBytesPCode(PCode):
     def parse(self, p, addr):
         cnt = readub(p)
-        inst_args = [readub(p) for i in xrange(cnt)]
+        inst_args = [readub(p) for i in range(cnt)]
 
         ret = self.create(p, addr)
         ret.parse(p, inst_args, *self.args)
@@ -1649,7 +1649,7 @@ class PushBytesPCode(PCode):
 
     def getargs(self, s):
         cnt = readub(s)
-        for v in xrange(cnt):
+        for v in range(cnt):
             yield '%d' % readub(s)
 
     def disassemble(self, s):
